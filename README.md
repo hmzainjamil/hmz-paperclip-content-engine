@@ -1,106 +1,103 @@
 # hmz-paperclip-content-engine
+> Content production — scripts, posts, emails, carousels — 20 pieces/day. Part of the DigiMinds Paperclip automation engine suite.
 
-> **Autonomous LinkedIn content engine | runs 8:00 AM daily | builds DigiMinds thought leadership without lifting a finger**
+[![paperclip](https://img.shields.io/badge/Paperclip-engine-blue?style=flat&labelColor=555)](https://github.com/paperclipai/paperclip)
+[![mae](https://img.shields.io/badge/MAE-powered-green?style=flat&labelColor=555)](.)
+[![tools](https://img.shields.io/badge/tools-Kimi-orange?style=flat&labelColor=555)](.)
+[![tier0](https://img.shields.io/badge/tier0-zero--cost-purple?style=flat&labelColor=555)](.)
+[![license](https://img.shields.io/badge/license-MIT-lightgrey?style=flat&labelColor=555)](LICENSE)
 
-[![schedule](https://img.shields.io/badge/schedule-8%3A00AM_daily-blue?style=flat)](.) [![platform](https://img.shields.io/badge/platform-LinkedIn-0077B5?style=flat)](.) [![status](https://img.shields.io/badge/status-always_on-brightgreen?style=flat)](.) [![company](https://img.shields.io/badge/company-DigiMinds-orange?style=flat)](.)
-
-[Overview](#overview) · [Pipeline](#pipeline) · [Content Types](#content-types) · [Calendar](#calendar) · [Tips](#tips)
-
----
-
-## 🧠 OVERVIEW
-
-Paperclip Content Engine generates and schedules LinkedIn content for DigiMinds every morning at 8 AM. It pulls trend signals, picks the best content angle for the day, writes post copy + hooks, and schedules via LinkedIn API. HMZ's personal brand runs on autopilot.
-
-| Component | Value |
-|---|---|
-| Trigger | Daily 8:00 AM (LaunchAgent) |
-| Output platform | LinkedIn (HMZ personal + DigiMinds page) |
-| Content volume | 1 post/day + 3 comments on competitor posts |
-| Model | Gemini Flash (zero Claude tokens) |
-| Style guide | HMZ voice: direct, data-driven, no fluff |
+[concepts](#concepts) · [architecture](#architecture) · [tips](#tips) · [startups](#startups) · [star](#star)
 
 ---
 
-## ⚙️ PIPELINE
+## 🧠 CONCEPTS <a id="concepts"></a>
+
+| Feature | Location | Description |
+|---|---|---|
+| [**Core Engine**](engine/) | `engine/` | Main orchestration loop — reads from Paperclip → executes → reports back |
+| [**Paperclip Sync**](sync/) | `sync/` | Bidirectional sync with Paperclip API at localhost:3100 |
+| [**MAE Integration**](mae/) | `mae/` | Routes tasks through MAE swarm — wave-batched, RAM-safe |
+| [**Tier 0 Routing**](routing/) | `routing/` | Tools used: Kimi K2.6 · Gemini · GPT4o-mini |
+| [**Output Storage**](outputs/) | `outputs/` | Results saved to `~/.claude/tcc-logs/` + synced to Paperclip |
+| [**LaunchAgent**](launchagents/) | `launchagents/` | Optional persistent LaunchAgent — runs engine on schedule |
+
+### 🔥 Hot
+
+| Feature | Location | Description |
+|---|---|---|
+| [**Zero-cost execution**](engine/) | `engine/` | All processing via Tier 0 models — Groq, Gemini, Kimi, Bytez |
+| [**Auto-retry**](engine/) | `engine/` | Failed tasks auto-retry with fallback model via TCC retry mechanism |
+| [**Paperclip goal sync**](sync/) | `sync/` | Reads outstanding goals from Paperclip every run cycle |
+
+---
+
+## ⚙️ ARCHITECTURE <a id="architecture"></a>
 
 ```
-08:00 AM trigger
-    │
-    ├─► Fetch trends: Google Ads news, Meta updates, PPC industry shifts
-    ├─► Pull top competitor posts from last 24h (engagement signals)
-    ├─► Select content angle (rotation: insight → case study → hot take → tip → story)
-    │
-    ├─► Generate: hook + body + CTA (Gemini Flash, HMZ voice)
-    ├─► Quality check: readability, no fluff, data present, hook strength
-    │
-    └─► Schedule via LinkedIn API (target: 10 AM publish for max reach)
+Paperclip CEO Layer (localhost:3100)
+         │
+         │ reads goals + tasks
+         ▼
+    Content Engine Engine
+         │
+    MAE decompose
+         │
+    Tier 0 swarm (Kimi K2.6 · Gemini · GPT4o-mini)
+         │
+    synthesis + output
+         │
+         │ reports results
+         ▼
+Paperclip CEO Layer (updated goals)
 ```
 
-| Stage | Tool | Output |
+| Phase | Model | Purpose |
 |---|---|---|
-| Trend pull | Groq + Google News API | Top 5 signals |
-| Angle selection | Rotation calendar | Day's content type |
-| Copy generation | Gemini Flash | Hook + body + CTA |
-| Quality gate | Rules-based check | Pass/fail score |
-| Publish | LinkedIn API | Scheduled post |
+| Decompose | Groq llama-3.1-8b-instant | Break goal into sub-tasks |
+| Execute | Kimi K2.6 + more | Run specialist tasks |
+| Synthesize | Groq llama-3.3-70b-versatile | Merge outputs |
+| Report | Paperclip API | Update goal status |
 
 ---
 
-## 📅 CONTENT CALENDAR (ROTATION)
+## 💡 TIPS AND TRICKS (8) <a id="tips"></a>
 
-| Day | Content Type | Focus |
-|---|---|---|
-| Monday | Industry insight | Google Ads update or Meta change |
-| Tuesday | Case study | DigiMinds client result (anonymized) |
-| Wednesday | Hot take | Contrarian PPC/marketing opinion |
-| Thursday | Tactical tip | Actionable PPC/CRO tip |
-| Friday | Story | Founder journey or client win |
-| Saturday | Curated thread | Best of week roundup |
-| Sunday | Question | Community engagement post |
+[engine-ops](#tips-ops) · [paperclip-integration](#tips-pc)
 
----
+<a id="tips-ops"></a>
+■ **Engine Operations (4)**
 
-## 💡 TIPS
-
-■ **Content Quality (5)**
 | Tip | Source |
 |---|---|
-| Hook must contain a number or shocking claim — first 2 lines decide everything | LinkedIn algorithm |
-| Never post generic "5 tips" content — always tie to specific data or result | HMZ voice guide |
-| Comments on competitor posts drive 3x more profile visits than standalone posts | LinkedIn SOP |
-| Best publish time: 10-11 AM weekdays (engine auto-targets this) | Analytics data |
-| Posts with personal failure stories get 4x more comments than success stories | DigiMinds test |
+| Start: `python3 engine/main.py` or load LaunchAgent for persistent operation | [hmzainjamil](https://github.com/hmzainjamil) |
+| `mae run "goal"` triggers this engine via TCC routing when keyword matches | [hmzainjamil](https://github.com/hmzainjamil) |
+| All outputs go to `~/.claude/tcc-logs/mae-TIMESTAMP.md` — searchable history | [hmzainjamil](https://github.com/hmzainjamil) |
+| `tcc watch` monitors engine task queue in real-time — see active/pending/done | [hmzainjamil](https://github.com/hmzainjamil) |
 
-■ **Operations (3)**
+<a id="tips-pc"></a>
+■ **Paperclip Integration (4)**
+
 | Tip | Source |
 |---|---|
-| Check `/api/content?date=today` to preview before publish | API ref |
-| If quality gate fails, engine posts to draft queue instead of publishing | Error handling |
-| Content calendar can be overridden via `/api/content/override` | API ref |
+| Paperclip must be running: `cd ~/installed-repos/paperclip && pnpm dev` | [Paperclip AI](https://github.com/paperclipai) |
+| Company ID `c5066522-bacc-4a28-b700-6590cbe366ec` scopes all API calls to DigiMinds | [hmzainjamil](https://github.com/hmzainjamil) |
+| Engine falls back to `llm-burst` if Paperclip API returns 404 | [hmzainjamil](https://github.com/hmzainjamil) |
+| Set engine goals via Paperclip dashboard → engine picks up on next run cycle | [Paperclip AI](https://github.com/paperclipai) |
 
 ---
 
-## ☠️ TOOLS REPLACED
+## ☠️ STARTUPS / BUSINESSES <a id="startups"></a>
 
-| Content Engine | Replaced |
+| Feature | Replaced |
 |---|---|
-| Daily LinkedIn content | 45-min manual writing session |
-| Trend research | Manual news scanning |
-| Competitor monitoring | Manual LinkedIn stalking |
-| Scheduling | Buffer/Hootsuite subscription |
+| **Autonomous engine loop** | [AutoGPT](https://autogpt.net), [AgentGPT](https://agentgpt.reworkd.ai), [BabyAGI](https://github.com/yoheinakajima/babyagi) |
+| **Paperclip company OS** | [Notion AI](https://notion.so), [Monday.com](https://monday.com), [Asana](https://asana.com) |
+| **Zero-cost Tier 0 execution** | [CrewAI Cloud](https://crewai.com), [LangSmith](https://smith.langchain.com) |
+| **MAE swarm synthesis** | [LangGraph](https://langgraph.com), [AutoGen](https://github.com/microsoft/autogen) |
 
 ---
 
-## ⚠️ GOTCHAS
+## Star History <a id="star"></a>
 
-| Issue | Fix |
-|---|---|
-| LinkedIn API rate limit | Engine queues and retries next hour |
-| Quality gate fails repeatedly | Review HMZ voice guide in config |
-| Post went out with wrong angle | Manual override: `/api/content/override` |
-| Engagement dropped | Check if LinkedIn algorithm changed — update hook rules |
-
----
-
-*Part of [DigiMinds AI Agency Stack](https://github.com/hmzainjamil) — Paperclip autonomous content engine*
+[![Star History Chart](https://api.star-history.com/svg?repos=hmzainjamil/hmz-paperclip-content-engine&type=Date)](https://star-history.com/#hmzainjamil/hmz-paperclip-content-engine&Date)
