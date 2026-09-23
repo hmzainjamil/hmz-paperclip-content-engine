@@ -1,5 +1,9 @@
 # hmz-paperclip-content-engine
 
+<!-- HMZ PORTFOLIO STANDARD -->
+> Portfolio status: active · Visibility: public · Source of truth: current repository source.
+<!-- END HMZ PORTFOLIO STANDARD -->
+
 <!-- HMZ PORTFOLIO CONTEXT START -->
 <p align="center">
   <a href="https://github.com/hmzainjamil/hmz-paperclip-content-engine">Repository</a> ·
